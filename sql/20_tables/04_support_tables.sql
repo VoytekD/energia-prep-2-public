@@ -1,0 +1,2 @@
+-- sql/20_tables/04_support_tables.sql
+-- Helpery / wsparcie: generator input.date_dim
