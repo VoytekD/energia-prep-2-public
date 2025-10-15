@@ -1,0 +1,148 @@
+services:
+  energia-prep-2:
+    labels:
+      - dozzle.enable=true
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        VCS_REF: ${GIT_COMMIT:-dev}   # commit -> inny digest -> auto recreate
+    image: energia-prep-2:latest
+    container_name: energia-prep-2
+
+    env_file:
+      - .env
+
+    environment:
+      TZ: ${TZ}
+      SQL_DIR: ${SQL_DIR:-/app/sql}
+      API_PORT: ${API_PORT:-8003}
+
+    volumes:
+      - ${SQL_LOCAL_DIR:-./sql}:/app/sql
+
+    ports:
+      - "${API_PORT:-8003}:8003"
+
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://127.0.0.1:8003/_health/status.json | grep -q '\"status\":\"up\"'" ]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  calc-listener:
+    labels:
+      - dozzle.enable=true
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        VCS_REF: ${GIT_COMMIT:-dev}
+    image: energia-prep-2:latest
+    container_name: calc-listener
+
+    env_file:
+      - .env
+
+    environment:
+      # Co ile sekund pętla nasłuchiwania sprawdza kolejkę zadań (polling),
+      # gdy nie przyszło żadne NOTIFY. Mniejsze wartości = szybsza reakcja,
+      # ale częstsze odpytywanie bazy.
+      # Domyślnie: 3
+      CALC_POLL_SEC: "3"
+
+      # Okresowe „tyknięcie” (housekeeping): co ile sekund wykonywać zadania
+      # okresowe, np. heartbeat/logi/stats. Nie wpływa na pojedynczy bieg,
+      # ale gwarantuje regularne utrzymanie.
+      # Domyślnie: 60
+      PERIODIC_TICK_SEC: "60"
+
+      # Debounce sygnałów uruchomienia (NOTIFY/żądania z UI): ile sekund
+      # zbierać szybkie, powtarzające się sygnały w jedno uruchomienie.
+      # Większa wartość = mniej zbędnych restartów przy serii zmian parametrów.
+      # Domyślnie: 2
+      DEBOUNCE_SECONDS: "2"
+
+      # Czy uruchomić przeliczenie automatycznie po starcie procesu.
+      # Wartości: "true"/"false". Przy "true" po init sprawdzimy najnowsze params
+      # i wrzucimy job do kolejki.
+      # Domyślnie: "true"
+      CALC_RUN_ON_STARTUP: "true"
+
+      # Maksymalny czas (sekundy) czekania na przygotowanie środowiska (np. DB)
+      # przed startem pętli pracy. Po przekroczeniu spróbujemy ponownie zgodnie
+      # z polityką startu.
+      # Domyślnie: 10
+      PREP_WAIT_SEC: "10"
+
+      # Interwał (sekundy) wysyłania „heartbeat”/sprawdzenia gotowości
+      # podczas fazy przygotowania (prep). Pomaga w logach i monitoringu,
+      # by widzieć, że proces żyje i czeka.
+      # Domyślnie: 30
+      PREP_HEARTBEAT_SEC: "30"
+
+      # Czy na czas szybkiego wsadu (COPY) zdejmować i po zapisie odbudowywać indeksy,
+      # aby uniknąć kosztownego utrzymywania indeksów w trakcie dużych insertów.
+      # Dostępne wartości:
+      # - "1" / "true" / "on"  → zdejmij indeksy (DROP INDEX 02/03) przed COPY i utwórz je po COPY (CREATE INDEX) — szybciej przy większych wsadach.
+      # - "0" / "false" / "no" → pozostaw indeksy — wygodniej, ale COPY bywa wolniejsze przy bardzo dużych wsadach.
+      # Domyślnie: "1"
+      CALC_PERSIST_REINDEX: "1"
+
+      # Maksymalna liczba wierszy buforowanych w pamięci, zanim wyślemy porcję do COPY.
+      # Im większa porcja, tym mniej wywołań I/O, ale większy chwilowy bufor.
+      # Dla wsadów rzędu kilku–kilkunastu tysięcy zwykle i tak idzie w 1 porcji.
+      # Ustawienia:
+      # - liczba > 0  → limit aktywny (np. 20000)
+      # - "0"         → wyłącz limit po wierszach (steruj tylko bajtami)
+      # Domyślnie: 20000
+      CALC_COPY_CHUNK_ROWS: "20000"
+
+      # Maksymalny rozmiar bufora (w bajtach) zanim wyślemy porcję do COPY.
+      # Pomaga utrzymać stabilne zużycie pamięci przy dużych wsadach.
+      # Ustawienia:
+      # - liczba > 0  → limit aktywny (np. 4194304 = 4 MiB)
+      # - "0"         → wyłącz limit po bajtach (steruj tylko wierszami)
+      # Domyślnie: 4194304 (4 MiB)
+      CALC_COPY_CHUNK_BYTES: "4194304"
+
+      # Czy używać COPY FREEZE (zamrażanie tuplek przy wstawieniu),
+      # co zmniejsza późniejszą pracę autovacuum i ilość WAL.
+      # Uwaga: FREEZE działa efektywnie tylko wtedy, gdy tabela została
+      # TRUNCATE’owana w tej samej transakcji (czyli przy CALC_CLEAR_MODE="truncate").
+      # Dostępne wartości:
+      # - "1" / "true" / "on"  → użyj COPY FREEZE (zalecane z TRUNCATE)
+      # - "0" / "false" / "no" → zwykły COPY (przy CLEAR_MODE="delete" i tak brak efektu FREEZE)
+      # Domyślnie: "1"
+      CALC_COPY_FREEZE: "1"
+
+      # Sposób czyszczenia danych w tabelach stage (przed zapisem nowego przebiegu).
+      # Dostępne wartości:
+      # - "delete"     → USUŃ WSZYSTKIE wiersze poleceniem DELETE.
+      #                  Kompatybilne z SELECT (Grafana nie blokuje przeliczeń). Rekomendowane na prod.
+      # - "truncate"   → TRUNCATE całych tabel (najszybsze czyszczenie, brak bloatu),
+      #                  ale wymaga ACCESS EXCLUSIVE i może czekać, jeśli Grafana akurat czyta.
+      # - "append" / "none" / "off" / "" → nic nie czyścimy; kolejne przebiegi są dopisywane (historia).
+      #                  Wymagane filtrowanie po calc_id w panelach i okresowy cleanup starych przebiegów.
+      # - "drop"       → DROP TABLE + ponowne CREATE (wraz z indeksami). Twardy reset, sensowne głównie w dev.
+      CALC_CLEAR_MODE: "truncate"
+
+      # Przełącznik progu dla metody wstawiania danych:
+      # - jeśli liczba wierszy ≥ CALC_COPY_THRESHOLD → użyj COPY FROM STDIN (szybkie wsady),
+      # - jeśli liczba wierszy <  CALC_COPY_THRESHOLD → użyj executemany(INSERT ...).
+      # Brak fallbacku — jeśli COPY się wyłoży, bieg zostanie przerwany (fail-fast).
+      # Wymuszenia:
+      # - zawsze COPY: ustaw  CALC_COPY_THRESHOLD: 1
+      # - zawsze executemany: ustaw  CALC_COPY_THRESHOLD: 1000000
+      CALC_COPY_THRESHOLD: 5000
+
+    entrypoint: ["python", "-m", "energia_prep2.calc.listener"]
+
+    depends_on:
+      energia-prep-2:
+        condition: service_healthy
+
+networks:
+  default:
+    driver: bridge

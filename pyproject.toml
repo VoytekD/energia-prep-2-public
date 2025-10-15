@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "energia-prep-2"
+version = "0.1.0"
+description = "Pipeline do przygotowania danych energii (SQL bootstrap, import CSV, widoki, API)."
+authors = [
+  { name = "Wojciech Dreżewski" }
+]
+readme = "README.md"
+requires-python = ">=3.12"
+
+dependencies = [
+  "psycopg[binary]>=3.2.4,<3.3",
+  "psycopg_pool>=3.2.3,<3.3",
+  "python-dateutil>=2.9,<3.0",
+  "pytz>=2024.1",
+  "requests>=2.32,<3.0",
+  "PyYAML>=6.0.1,<7.0",
+  "pydantic>=2.7,<3.0",
+  "pydantic-settings>=2.3,<3.0",
+  "fastapi>=0.115,<0.116",
+  "uvicorn[standard]>=0.30,<0.31",
+  "holidays>=0.48",
+  "pandas>=2.2",
+  "watchdog>=4.0",
+  "numpy>=1.26,<2.0",
+  "numba>=0.60,<0.61",
+  "SQLAlchemy>=2.0,<3.0",
+  "alembic>=1.13,<2.0",
+  "orjson>=3.10,<4.0",
+  "httpx>=0.27,<0.28",
+]
+
+[project.optional-dependencies]
+dev = [
+  "black>=24.4",
+  "isort>=5.13",
+  "ruff>=0.5",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "I"]  # errors, formatting, warnings, imports
+exclude = [
+  ".git",
+  ".venv",
+  "venv",
+  "__pycache__",
+  "build",
+  "dist",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
