@@ -1,0 +1,574 @@
+# === MAPA formularzy -> docelowe tabele (slug => (schema, table)) ===
+params_tables:
+  form_zmienne:               { schema: params, table: form_zmienne }
+  form_bess_param:            { schema: params, table: form_bess_param }
+  form_parametry_klienta:     { schema: params, table: form_parametry_klienta }
+  form_oplaty_dystrybucyjne:  { schema: params, table: form_oplaty_dystrybucyjne }
+  form_oplaty_dyst_sched:     { schema: params, table: form_oplaty_dyst_sched }
+  form_oplaty_systemowe:      { schema: params, table: form_oplaty_systemowe }
+  form_oplaty_sys_sched:      { schema: params, table: form_oplaty_sys_sched }
+  form_oplaty_sys_kparam:     { schema: params, table: form_oplaty_sys_kparam }
+  form_par_kontraktu:         { schema: params, table: form_par_kontraktu }
+  form_oplaty_fiskalne:       { schema: params, table: form_oplaty_fiskalne }
+  form_lcoe:                  { schema: params, table: form_lcoe }
+  form_par_arbitrazu:         { schema: params, table: form_par_arbitrazu }
+
+form_par_arbitrazu:
+  base_min_profit_pln_mwh: 200.00; number,2   # wyższy próg, żeby pokryć LCOS + bufor
+  cycles_per_day: 2; integer
+  allow_carry_over: true; boolean             # przenieś cykl, jeśli warunki słabe
+  force_order: true; boolean
+
+  bonus_ch_window: -50.00; number,2           # PLN/MWh - delikatne „przechylenie” pod ładowanie
+  bonus_dis_window: -30.00; number,2          # PLN/MWh -i rozładowanie (mniejsze niż charge)
+  bonus_low_soc_ch: -40.00; number,2          # PLN/MWh -gdy nisko z SOC, łatwiej ładujemy
+  bonus_high_soc_dis: -40.00; number,2        # PLN/MWh -gdy wysoko z SOC, łatwiej rozładowujemy
+
+  # LISTY (bez sufiksów typu):
+  bonus_hrs_ch:       [14,15,16,17]           # dni pracujące: 2 cykle: 14–15, 16–17
+  bonus_hrs_dis:      [0,1,19,20]             # dni pracujące: 0–1, 19–20
+  bonus_hrs_ch_free:  [15,16,17,18]           # dni wolne: 15–16, 17–18
+  bonus_hrs_dis_free: [0,1,22,23]             # dni wolne: 0–1, 22–23
+
+  soc_high_threshold: 90; integer             # troszkę niżej niż 90, mniej clippingu
+  soc_low_threshold: 10; integer              # wyżej niż 10, dbamy o rezerwę
+
+  arbi_dis_to_load: false; boolean
+
+# -- form_zmienne
+form_zmienne:
+  emax: 2.00; number,2
+  moc_pv_pp: 1.00; number,2
+  moc_pv_wz: 1.00; number,2
+  moc_wiatr: 1.00; number,2
+  procent_arbitrazu: 50; integer
+  zmiany_konsumpcji: 0; integer
+
+# -- form_bess_param
+form_bess_param:
+  bess_c_rate_charge: 2.00; number,2
+  bess_c_rate_discharge: 2.00; number,2
+  bess_charge_eff: 95; integer
+  bess_discharge_eff: 92; integer
+  bess_lambda_month: 3.0000; number,4
+  bess_max_life: 15; integer
+  bess_max_soc: 100; integer
+  bess_min_soc: 0; integer
+  bess_soc_start: 0; integer
+  bess_soh_decrease: 1.0000; number,4
+  bess_soh_start: 100; integer
+  self_consumption_year: 3.0000; number,4
+
+# -- form_parametry_klienta
+form_parametry_klienta:
+  klient_moc_umowna: 2.0; number,1
+  local_tz: Europe/Warsaw; string
+
+form_lcoe:
+  lcoe_pv_pp:     350.00; number,2
+  lcoe_pv_wz:     350.00; number,2
+  lcoe_wiatr:     350.00; number,2
+
+# -- form_parametry_kontraktu
+form_par_kontraktu:
+  typ_kontraktu: stala; text
+  wybrana_taryfa: wybrana_b23; text
+  cena_energii_stała: 500.00; number,2
+  opłata_handlowa_stala: 20.00; number,2
+  opłata_handlowa_marza_stala: 5.00; number,2
+  oplata_handlowa_marza_zmienna: 10; integer
+  proc_zmiana_ceny: 0; integer
+
+# -- form_parametry_fiskalne
+form_oplaty_fiskalne:
+  akcyza: 5.00; number,2
+  vat: 23; integer
+
+# ─────────────────────────────────────────────────────────────────────────────
+# OPŁATY DYSTRYBUCYJNE
+# ─────────────────────────────────────────────────────────────────────────────
+
+# -- form_oplaty_dystrybucyjne
+form_oplaty_dystrybucyjne:
+  dyst_fixed_b21: 17.49; number,2
+  dyst_fixed_b22: 17.49; number,2
+  dyst_fixed_b23: 17.93; number,2
+
+  dyst_var_b21_morn: 81.77; number,2
+  dyst_var_b21_aft: 81.77; number,2
+  dyst_var_b21_other: 81.77; number,2
+
+  dyst_var_b22_morn: 94.07; number,2
+  dyst_var_b22_aft: 94.07; number,2
+  dyst_var_b22_other: 75.26; number,2
+
+  dyst_var_b23_morn: 47.73; number,2
+  dyst_var_b23_aft: 54.47; number,2
+  dyst_var_b23_other: 42.11; number,2
+
+  dyst_trans_b21: 0.19; number,2
+  dyst_trans_b22: 0.19; number,2
+  dyst_trans_b23: 0.19; number,2
+
+  dyst_abon_b21: 18.00; number,2
+  dyst_abon_b22: 18.00; number,2
+  dyst_abon_b23: 18.00; number,2
+  dyst_qual_b21: 32.12; number,2
+  dyst_qual_b22: 32.12; number,2
+  dyst_qual_b23: 32.12; number,2
+
+# -- form_oplaty_dyst_sched
+form_oplaty_dyst_sched:
+  dyst_sched_b21_jan_work_morn_start: 0; integer
+  dyst_sched_b21_jan_work_morn_end: 0; integer
+  dyst_sched_b21_jan_work_aft_start: 0; integer
+  dyst_sched_b21_jan_work_aft_end: 0; integer
+
+  dyst_sched_b21_feb_work_morn_start: 0; integer
+  dyst_sched_b21_feb_work_morn_end: 0; integer
+  dyst_sched_b21_feb_work_aft_start: 0; integer
+  dyst_sched_b21_feb_work_aft_end: 0; integer
+
+  dyst_sched_b21_mar_work_morn_start: 0; integer
+  dyst_sched_b21_mar_work_morn_end: 0; integer
+  dyst_sched_b21_mar_work_aft_start: 0; integer
+  dyst_sched_b21_mar_work_aft_end: 0; integer
+
+  dyst_sched_b21_apr_work_morn_start: 0; integer
+  dyst_sched_b21_apr_work_morn_end: 0; integer
+  dyst_sched_b21_apr_work_aft_start: 0; integer
+  dyst_sched_b21_apr_work_aft_end: 0; integer
+
+  dyst_sched_b21_may_work_morn_start: 0; integer
+  dyst_sched_b21_may_work_morn_end: 0; integer
+  dyst_sched_b21_may_work_aft_start: 0; integer
+  dyst_sched_b21_may_work_aft_end: 0; integer
+
+  dyst_sched_b21_jun_work_morn_start: 0; integer
+  dyst_sched_b21_jun_work_morn_end: 0; integer
+  dyst_sched_b21_jun_work_aft_start: 0; integer
+  dyst_sched_b21_jun_work_aft_end: 0; integer
+
+  dyst_sched_b21_jul_work_morn_start: 0; integer
+  dyst_sched_b21_jul_work_morn_end: 0; integer
+  dyst_sched_b21_jul_work_aft_start: 0; integer
+  dyst_sched_b21_jul_work_aft_end: 0; integer
+
+  dyst_sched_b21_aug_work_morn_start: 0; integer
+  dyst_sched_b21_aug_work_morn_end: 0; integer
+  dyst_sched_b21_aug_work_aft_start: 0; integer
+  dyst_sched_b21_aug_work_aft_end: 0; integer
+
+  dyst_sched_b21_sep_work_morn_start: 0; integer
+  dyst_sched_b21_sep_work_morn_end: 0; integer
+  dyst_sched_b21_sep_work_aft_start: 0; integer
+  dyst_sched_b21_sep_work_aft_end: 0; integer
+
+  dyst_sched_b21_oct_work_morn_start: 0; integer
+  dyst_sched_b21_oct_work_morn_end: 0; integer
+  dyst_sched_b21_oct_work_aft_start: 0; integer
+  dyst_sched_b21_oct_work_aft_end: 0; integer
+
+  dyst_sched_b21_nov_work_morn_start: 0; integer
+  dyst_sched_b21_nov_work_morn_end: 0; integer
+  dyst_sched_b21_nov_work_aft_start: 0; integer
+  dyst_sched_b21_nov_work_aft_end: 0; integer
+
+  dyst_sched_b21_dec_work_morn_start: 0; integer
+  dyst_sched_b21_dec_work_morn_end: 0; integer
+  dyst_sched_b21_dec_work_aft_start: 0; integer
+  dyst_sched_b21_dec_work_aft_end: 0; integer
+
+  dyst_sched_b21_jan_free_morn_start: 0; integer
+  dyst_sched_b21_jan_free_morn_end: 0; integer
+  dyst_sched_b21_jan_free_aft_start: 0; integer
+  dyst_sched_b21_jan_free_aft_end: 0; integer
+
+  dyst_sched_b21_feb_free_morn_start: 0; integer
+  dyst_sched_b21_feb_free_morn_end: 0; integer
+  dyst_sched_b21_feb_free_aft_start: 0; integer
+  dyst_sched_b21_feb_free_aft_end: 0; integer
+
+  dyst_sched_b21_mar_free_morn_start: 0; integer
+  dyst_sched_b21_mar_free_morn_end: 0; integer
+  dyst_sched_b21_mar_free_aft_start: 0; integer
+  dyst_sched_b21_mar_free_aft_end: 0; integer
+
+  dyst_sched_b21_apr_free_morn_start: 0; integer
+  dyst_sched_b21_apr_free_morn_end: 0; integer
+  dyst_sched_b21_apr_free_aft_start: 0; integer
+  dyst_sched_b21_apr_free_aft_end: 0; integer
+
+  dyst_sched_b21_may_free_morn_start: 0; integer
+  dyst_sched_b21_may_free_morn_end: 0; integer
+  dyst_sched_b21_may_free_aft_start: 0; integer
+  dyst_sched_b21_may_free_aft_end: 0; integer
+
+  dyst_sched_b21_jun_free_morn_start: 0; integer
+  dyst_sched_b21_jun_free_morn_end: 0; integer
+  dyst_sched_b21_jun_free_aft_start: 0; integer
+  dyst_sched_b21_jun_free_aft_end: 0; integer
+
+  dyst_sched_b21_jul_free_morn_start: 0; integer
+  dyst_sched_b21_jul_free_morn_end: 0; integer
+  dyst_sched_b21_jul_free_aft_start: 0; integer
+  dyst_sched_b21_jul_free_aft_end: 0; integer
+
+  dyst_sched_b21_aug_free_morn_start: 0; integer
+  dyst_sched_b21_aug_free_morn_end: 0; integer
+  dyst_sched_b21_aug_free_aft_start: 0; integer
+  dyst_sched_b21_aug_free_aft_end: 0; integer
+
+  dyst_sched_b21_sep_free_morn_start: 0; integer
+  dyst_sched_b21_sep_free_morn_end: 0; integer
+  dyst_sched_b21_sep_free_aft_start: 0; integer
+  dyst_sched_b21_sep_free_aft_end: 0; integer
+
+  dyst_sched_b21_oct_free_morn_start: 0; integer
+  dyst_sched_b21_oct_free_morn_end: 0; integer
+  dyst_sched_b21_oct_free_aft_start: 0; integer
+  dyst_sched_b21_oct_free_aft_end: 0; integer
+
+  dyst_sched_b21_nov_free_morn_start: 0; integer
+  dyst_sched_b21_nov_free_morn_end: 0; integer
+  dyst_sched_b21_nov_free_aft_start: 0; integer
+  dyst_sched_b21_nov_free_aft_end: 0; integer
+
+  dyst_sched_b21_dec_free_morn_start: 0; integer
+  dyst_sched_b21_dec_free_morn_end: 0; integer
+  dyst_sched_b21_dec_free_aft_start: 0; integer
+  dyst_sched_b21_dec_free_aft_end: 0; integer
+
+  dyst_sched_b22_jan_work_morn_start: 8; integer
+  dyst_sched_b22_jan_work_morn_end: 11; integer
+  dyst_sched_b22_jan_work_aft_start: 16; integer
+  dyst_sched_b22_jan_work_aft_end: 21; integer
+
+  dyst_sched_b22_feb_work_morn_start: 8; integer
+  dyst_sched_b22_feb_work_morn_end: 11; integer
+  dyst_sched_b22_feb_work_aft_start: 16; integer
+  dyst_sched_b22_feb_work_aft_end: 21; integer
+
+  dyst_sched_b22_mar_work_morn_start: 8; integer
+  dyst_sched_b22_mar_work_morn_end: 11; integer
+  dyst_sched_b22_mar_work_aft_start: 18; integer
+  dyst_sched_b22_mar_work_aft_end: 21; integer
+
+  dyst_sched_b22_apr_work_morn_start: 8; integer
+  dyst_sched_b22_apr_work_morn_end: 11; integer
+  dyst_sched_b22_apr_work_aft_start: 19; integer
+  dyst_sched_b22_apr_work_aft_end: 21; integer
+
+  dyst_sched_b22_may_work_morn_start: 8; integer
+  dyst_sched_b22_may_work_morn_end: 11; integer
+  dyst_sched_b22_may_work_aft_start: 20; integer
+  dyst_sched_b22_may_work_aft_end: 21; integer
+
+  dyst_sched_b22_jun_work_morn_start: 8; integer
+  dyst_sched_b22_jun_work_morn_end: 11; integer
+  dyst_sched_b22_jun_work_aft_start: 20; integer
+  dyst_sched_b22_jun_work_aft_end: 21; integer
+
+  dyst_sched_b22_jul_work_morn_start: 8; integer
+  dyst_sched_b22_jul_work_morn_end: 11; integer
+  dyst_sched_b22_jul_work_aft_start: 20; integer
+  dyst_sched_b22_jul_work_aft_end: 21; integer
+
+  dyst_sched_b22_aug_work_morn_start: 8; integer
+  dyst_sched_b22_aug_work_morn_end: 11; integer
+  dyst_sched_b22_aug_work_aft_start: 20; integer
+  dyst_sched_b22_aug_work_aft_end: 21; integer
+
+  dyst_sched_b22_sep_work_morn_start: 8; integer
+  dyst_sched_b22_sep_work_morn_end: 11; integer
+  dyst_sched_b22_sep_work_aft_start: 19; integer
+  dyst_sched_b22_sep_work_aft_end: 21; integer
+
+  dyst_sched_b22_oct_work_morn_start: 8; integer
+  dyst_sched_b22_oct_work_morn_end: 11; integer
+  dyst_sched_b22_oct_work_aft_start: 18; integer
+  dyst_sched_b22_oct_work_aft_end: 21; integer
+
+  dyst_sched_b22_nov_work_morn_start: 8; integer
+  dyst_sched_b22_nov_work_morn_end: 11; integer
+  dyst_sched_b22_nov_work_aft_start: 16; integer
+  dyst_sched_b22_nov_work_aft_end: 21; integer
+
+  dyst_sched_b22_dec_work_morn_start: 8; integer
+  dyst_sched_b22_dec_work_morn_end: 11; integer
+  dyst_sched_b22_dec_work_aft_start: 16; integer
+  dyst_sched_b22_dec_work_aft_end: 21; integer
+
+  dyst_sched_b22_jan_free_morn_start: 8; integer
+  dyst_sched_b22_jan_free_morn_end: 11; integer
+  dyst_sched_b22_jan_free_aft_start: 16; integer
+  dyst_sched_b22_jan_free_aft_end: 21; integer
+
+  dyst_sched_b22_feb_free_morn_start: 8; integer
+  dyst_sched_b22_feb_free_morn_end: 11; integer
+  dyst_sched_b22_feb_free_aft_start: 16; integer
+  dyst_sched_b22_feb_free_aft_end: 21; integer
+
+  dyst_sched_b22_mar_free_morn_start: 8; integer
+  dyst_sched_b22_mar_free_morn_end: 11; integer
+  dyst_sched_b22_mar_free_aft_start: 18; integer
+  dyst_sched_b22_mar_free_aft_end: 21; integer
+
+  dyst_sched_b22_apr_free_morn_start: 8; integer
+  dyst_sched_b22_apr_free_morn_end: 11; integer
+  dyst_sched_b22_apr_free_aft_start: 19; integer
+  dyst_sched_b22_apr_free_aft_end: 21; integer
+
+  dyst_sched_b22_may_free_morn_start: 8; integer
+  dyst_sched_b22_may_free_morn_end: 11; integer
+  dyst_sched_b22_may_free_aft_start: 20; integer
+  dyst_sched_b22_may_free_aft_end: 21; integer
+
+  dyst_sched_b22_jun_free_morn_start: 8; integer
+  dyst_sched_b22_jun_free_morn_end: 11; integer
+  dyst_sched_b22_jun_free_aft_start: 20; integer
+  dyst_sched_b22_jun_free_aft_end: 21; integer
+
+  dyst_sched_b22_jul_free_morn_start: 8; integer
+  dyst_sched_b22_jul_free_morn_end: 11; integer
+  dyst_sched_b22_jul_free_aft_start: 20; integer
+  dyst_sched_b22_jul_free_aft_end: 21; integer
+
+  dyst_sched_b22_aug_free_morn_start: 8; integer
+  dyst_sched_b22_aug_free_morn_end: 11; integer
+  dyst_sched_b22_aug_free_aft_start: 20; integer
+  dyst_sched_b22_aug_free_aft_end: 21; integer
+
+  dyst_sched_b22_sep_free_morn_start: 8; integer
+  dyst_sched_b22_sep_free_morn_end: 11; integer
+  dyst_sched_b22_sep_free_aft_start: 19; integer
+  dyst_sched_b22_sep_free_aft_end: 21; integer
+
+  dyst_sched_b22_oct_free_morn_start: 8; integer
+  dyst_sched_b22_oct_free_morn_end: 11; integer
+  dyst_sched_b22_oct_free_aft_start: 18; integer
+  dyst_sched_b22_oct_free_aft_end: 21; integer
+
+  dyst_sched_b22_nov_free_morn_start: 8; integer
+  dyst_sched_b22_nov_free_morn_end: 11; integer
+  dyst_sched_b22_nov_free_aft_start: 16; integer
+  dyst_sched_b22_nov_free_aft_end: 21; integer
+
+  dyst_sched_b22_dec_free_morn_start: 8; integer
+  dyst_sched_b22_dec_free_morn_end: 11; integer
+  dyst_sched_b22_dec_free_aft_start: 16; integer
+  dyst_sched_b22_dec_free_aft_end: 21; integer
+
+  dyst_sched_b23_jan_work_morn_start: 7; integer
+  dyst_sched_b23_jan_work_morn_end: 13; integer
+  dyst_sched_b23_jan_work_aft_start: 16; integer
+  dyst_sched_b23_jan_work_aft_end: 21; integer
+
+  dyst_sched_b23_feb_work_morn_start: 7; integer
+  dyst_sched_b23_feb_work_morn_end: 13; integer
+  dyst_sched_b23_feb_work_aft_start: 16; integer
+  dyst_sched_b23_feb_work_aft_end: 21; integer
+
+  dyst_sched_b23_mar_work_morn_start: 7; integer
+  dyst_sched_b23_mar_work_morn_end: 13; integer
+  dyst_sched_b23_mar_work_aft_start: 16; integer
+  dyst_sched_b23_mar_work_aft_end: 21; integer
+
+  dyst_sched_b23_apr_work_morn_start: 7; integer
+  dyst_sched_b23_apr_work_morn_end: 13; integer
+  dyst_sched_b23_apr_work_aft_start: 19; integer
+  dyst_sched_b23_apr_work_aft_end: 22; integer
+
+  dyst_sched_b23_may_work_morn_start: 7; integer
+  dyst_sched_b23_may_work_morn_end: 13; integer
+  dyst_sched_b23_may_work_aft_start: 19; integer
+  dyst_sched_b23_may_work_aft_end: 22; integer
+
+  dyst_sched_b23_jun_work_morn_start: 7; integer
+  dyst_sched_b23_jun_work_morn_end: 13; integer
+  dyst_sched_b23_jun_work_aft_start: 19; integer
+  dyst_sched_b23_jun_work_aft_end: 22; integer
+
+  dyst_sched_b23_jul_work_morn_start: 7; integer
+  dyst_sched_b23_jul_work_morn_end: 13; integer
+  dyst_sched_b23_jul_work_aft_start: 19; integer
+  dyst_sched_b23_jul_work_aft_end: 22; integer
+
+  dyst_sched_b23_aug_work_morn_start: 7; integer
+  dyst_sched_b23_aug_work_morn_end: 13; integer
+  dyst_sched_b23_aug_work_aft_start: 19; integer
+  dyst_sched_b23_aug_work_aft_end: 22; integer
+
+  dyst_sched_b23_sep_work_morn_start: 7; integer
+  dyst_sched_b23_sep_work_morn_end: 13; integer
+  dyst_sched_b23_sep_work_aft_start: 19; integer
+  dyst_sched_b23_sep_work_aft_end: 22; integer
+
+  dyst_sched_b23_oct_work_morn_start: 7; integer
+  dyst_sched_b23_oct_work_morn_end: 13; integer
+  dyst_sched_b23_oct_work_aft_start: 16; integer
+  dyst_sched_b23_oct_work_aft_end: 21; integer
+
+  dyst_sched_b23_nov_work_morn_start: 7; integer
+  dyst_sched_b23_nov_work_morn_end: 13; integer
+  dyst_sched_b23_nov_work_aft_start: 16; integer
+  dyst_sched_b23_nov_work_aft_end: 21; integer
+
+  dyst_sched_b23_dec_work_morn_start: 7; integer
+  dyst_sched_b23_dec_work_morn_end: 13; integer
+  dyst_sched_b23_dec_work_aft_start: 16; integer
+  dyst_sched_b23_dec_work_aft_end: 21; integer
+
+  dyst_sched_b23_jan_free_morn_start: 0; integer
+  dyst_sched_b23_jan_free_morn_end: 0; integer
+  dyst_sched_b23_jan_free_aft_start: 0; integer
+  dyst_sched_b23_jan_free_aft_end: 0; integer
+
+  dyst_sched_b23_feb_free_morn_start: 0; integer
+  dyst_sched_b23_feb_free_morn_end: 0; integer
+  dyst_sched_b23_feb_free_aft_start: 0; integer
+  dyst_sched_b23_feb_free_aft_end: 0; integer
+
+  dyst_sched_b23_mar_free_morn_start: 0; integer
+  dyst_sched_b23_mar_free_morn_end: 0; integer
+  dyst_sched_b23_mar_free_aft_start: 0; integer
+  dyst_sched_b23_mar_free_aft_end: 0; integer
+
+  dyst_sched_b23_apr_free_morn_start: 0; integer
+  dyst_sched_b23_apr_free_morn_end: 0; integer
+  dyst_sched_b23_apr_free_aft_start: 0; integer
+  dyst_sched_b23_apr_free_aft_end: 0; integer
+
+  dyst_sched_b23_may_free_morn_start: 0; integer
+  dyst_sched_b23_may_free_morn_end: 0; integer
+  dyst_sched_b23_may_free_aft_start: 0; integer
+  dyst_sched_b23_may_free_aft_end: 0; integer
+
+  dyst_sched_b23_jun_free_morn_start: 0; integer
+  dyst_sched_b23_jun_free_morn_end: 0; integer
+  dyst_sched_b23_jun_free_aft_start: 0; integer
+  dyst_sched_b23_jun_free_aft_end: 0; integer
+
+  dyst_sched_b23_jul_free_morn_start: 0; integer
+  dyst_sched_b23_jul_free_morn_end: 0; integer
+  dyst_sched_b23_jul_free_aft_start: 0; integer
+  dyst_sched_b23_jul_free_aft_end: 0; integer
+
+  dyst_sched_b23_aug_free_morn_start: 0; integer
+  dyst_sched_b23_aug_free_morn_end: 0; integer
+  dyst_sched_b23_aug_free_aft_start: 0; integer
+  dyst_sched_b23_aug_free_aft_end: 0; integer
+
+  dyst_sched_b23_sep_free_morn_start: 0; integer
+  dyst_sched_b23_sep_free_morn_end: 0; integer
+  dyst_sched_b23_sep_free_aft_start: 0; integer
+  dyst_sched_b23_sep_free_aft_end: 0; integer
+
+  dyst_sched_b23_oct_free_morn_start: 0; integer
+  dyst_sched_b23_oct_free_morn_end: 0; integer
+  dyst_sched_b23_oct_free_aft_start: 0; integer
+  dyst_sched_b23_oct_free_aft_end: 0; integer
+
+  dyst_sched_b23_nov_free_morn_start: 0; integer
+  dyst_sched_b23_nov_free_morn_end: 0; integer
+  dyst_sched_b23_nov_free_aft_start: 0; integer
+  dyst_sched_b23_nov_free_aft_end: 0; integer
+
+  dyst_sched_b23_dec_free_morn_start: 0; integer
+  dyst_sched_b23_dec_free_morn_end: 0; integer
+  dyst_sched_b23_dec_free_aft_start: 0; integer
+  dyst_sched_b23_dec_free_aft_end: 0; integer
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# OPŁATY SYSTEMOWE
+# ─────────────────────────────────────────────────────────────────────────────
+
+# STAWKI SYSTEMOWE (nieryczałtowe) — zł/MWh
+form_oplaty_systemowe:
+  stawka_mocowa:        "141.20; number,2"   # 0.1412 zł/kWh = 141.20 zł/MWh
+  stawka_oze:           "3.50; number,2"
+  stawka_kogeneracyjna: "3.00; number,2"
+
+
+# HARMONOGRAM OPŁATY MOCOWEJ (dni robocze 07–22, dni wolne 00–00) — godziny całkowite
+# ID: sys_sched_<mon>_<work|free>_peak_<start|end>, gdzie <mon> ∈ {jan,feb,mar,apr,may,jun,jul,aug,sep,oct,nov,dec}
+form_oplaty_sys_sched:
+  sys_sched_jan_work_peak_start: "7; integer"
+  sys_sched_jan_work_peak_end:   "22; integer"
+  sys_sched_jan_free_peak_start: "0; integer"
+  sys_sched_jan_free_peak_end:   "0; integer"
+
+  sys_sched_feb_work_peak_start: "7; integer"
+  sys_sched_feb_work_peak_end:   "22; integer"
+  sys_sched_feb_free_peak_start: "0; integer"
+  sys_sched_feb_free_peak_end:   "0; integer"
+
+  sys_sched_mar_work_peak_start: "7; integer"
+  sys_sched_mar_work_peak_end:   "22; integer"
+  sys_sched_mar_free_peak_start: "0; integer"
+  sys_sched_mar_free_peak_end:   "0; integer"
+
+  sys_sched_apr_work_peak_start: "7; integer"
+  sys_sched_apr_work_peak_end:   "22; integer"
+  sys_sched_apr_free_peak_start: "0; integer"
+  sys_sched_apr_free_peak_end:   "0; integer"
+
+  sys_sched_may_work_peak_start: "7; integer"
+  sys_sched_may_work_peak_end:   "22; integer"
+  sys_sched_may_free_peak_start: "0; integer"
+  sys_sched_may_free_peak_end:   "0; integer"
+
+  sys_sched_jun_work_peak_start: "7; integer"
+  sys_sched_jun_work_peak_end:   "22; integer"
+  sys_sched_jun_free_peak_start: "0; integer"
+  sys_sched_jun_free_peak_end:   "0; integer"
+
+  sys_sched_jul_work_peak_start: "7; integer"
+  sys_sched_jul_work_peak_end:   "22; integer"
+  sys_sched_jul_free_peak_start: "0; integer"
+  sys_sched_jul_free_peak_end:   "0; integer"
+
+  sys_sched_aug_work_peak_start: "7; integer"
+  sys_sched_aug_work_peak_end:   "22; integer"
+  sys_sched_aug_free_peak_start: "0; integer"
+  sys_sched_aug_free_peak_end:   "0; integer"
+
+  sys_sched_sep_work_peak_start: "7; integer"
+  sys_sched_sep_work_peak_end:   "22; integer"
+  sys_sched_sep_free_peak_start: "0; integer"
+  sys_sched_sep_free_peak_end:   "0; integer"
+
+  sys_sched_oct_work_peak_start: "7; integer"
+  sys_sched_oct_work_peak_end:   "22; integer"
+  sys_sched_oct_free_peak_start: "0; integer"
+  sys_sched_oct_free_peak_end:   "0; integer"
+
+  sys_sched_nov_work_peak_start: "7; integer"
+  sys_sched_nov_work_peak_end:   "22; integer"
+  sys_sched_nov_free_peak_start: "0; integer"
+  sys_sched_nov_free_peak_end:   "0; integer"
+
+  sys_sched_dec_work_peak_start: "7; integer"
+  sys_sched_dec_work_peak_end:   "22; integer"
+  sys_sched_dec_free_peak_start: "0; integer"
+  sys_sched_dec_free_peak_end:   "0; integer"
+
+# PARAMETRY K — progi i procenty (procenty podawane jako liczby: np. 15)
+# K1: 0–<5% → 17% stawki; K2: 5–<10% → 50%; K3: 10–<15% → 83%; K4: ≥15% → 100%
+form_oplaty_sys_kparam:
+  k1_przedz_floor: "0; number,2"
+  k1_przedz_cap:   "5; number,2"
+  opl_moc_k1_pct:  "17; integer"
+
+  k2_przedz_floor: "5; number,2"
+  k2_przedz_cap:   "10; number,2"
+  opl_moc_k2_pct:  "50; integer"
+
+  k3_przedz_floor: "10; number,2"
+  k3_przedz_cap:   "15; number,2"
+  opl_moc_k3_pct:  "83; integer"
+
+  k4_przedz_floor: "15; number,2"
+  k4_przedz_cap:   "100; number,2"
+  opl_moc_k4_pct:  "100; integer"

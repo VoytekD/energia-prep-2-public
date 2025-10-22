@@ -1,0 +1,33 @@
+# IDE / system
+.vscode/
+.idea/
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pytest_cache/
+
+# Build / dist
+build/
+dist/
+.eggs/
+*.egg-info/
+
+# Envs
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Data (trzymaj dane poza repo)
+data/*
+!data/.gitkeep
+
+.DS_Store
+._*
+*/._*

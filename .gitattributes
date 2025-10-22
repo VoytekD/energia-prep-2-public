@@ -1,0 +1,36 @@
+# ===============================
+# Mirror configuration
+# ===============================
+# Pliki oznaczone export-ignore NIE trafią do paczki tworzonej przez git archive
+# czyli nie zostaną wypchnięte do repo publicznego (mirror).
+
+# Pliki środowiskowe (zawierają sekrety)
+.env                 export-ignore
+.env.*               export-ignore
+
+# Dane lokalne / duże pliki / logi
+data/                export-ignore
+*.log                export-ignore
+dist/                export-ignore
+build/               export-ignore
+node_modules/        export-ignore
+
+# IDE / edytory
+.idea/               export-ignore
+.vscode/             export-ignore
+
+# Cache Pythona i inne śmieci runtime
+__pycache__/         export-ignore
+*.pyc                export-ignore
+*.pyo                export-ignore
+*.pyd                export-ignore
+
+# Specjalne docker-compose dla środowiska developerskiego
+docker-compose.override.yml export-ignore
+
+# Ukryj prywatne workflow GitHub (mirror.yml wrzucasz ręcznie)
+.github/             export-ignore
+
+# ===============================
+# Koniec reguł
+# ===============================

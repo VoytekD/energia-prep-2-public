@@ -1,0 +1,21 @@
+# system/IDE
+.DS_Store
+._*
+*/._*
+.vscode/
+.idea/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# build artefacts
+build/
+dist/
+
+# git i secrets
+.git
+.gitignore
+.env
